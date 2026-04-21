@@ -1,0 +1,18 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "gemma-4-31b",
+  "quantization": "Q8_0",
+  "file_size_gib": 30.38,
+  "backend": "SYCL",
+  "gpu_count": 2,
+  "gpu_split": "auto",
+  "build_info": "llama.cpp commit 25eec6f",
+  "threads": 6,
+  "sycl_f16": false,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 251.75, "std_dev": 0.98 },
+    "tg128": { "tokens_per_sec": 4.13, "std_dev": 0.00 }
+  },
+  "notes": "Q8_0 generation tanks on Xe2 — same kernel issue as Qwen 27B Q8_0."
+}

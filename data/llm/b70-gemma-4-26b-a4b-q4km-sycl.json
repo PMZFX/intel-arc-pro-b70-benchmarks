@@ -1,0 +1,17 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "gemma-4-26b-a4b",
+  "quantization": "Q4_K_M",
+  "file_size_gib": 15.70,
+  "backend": "SYCL",
+  "gpu_count": 1,
+  "build_info": "llama.cpp commit 25eec6f",
+  "threads": 6,
+  "sycl_f16": true,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 943.45, "std_dev": 36.23 },
+    "tg128": { "tokens_per_sec": 30.11, "std_dev": 0.02 }
+  },
+  "notes": "Fastest single-GPU model. MoE with ~4B active params. Prompt processing 3-4x faster than dense models."
+}

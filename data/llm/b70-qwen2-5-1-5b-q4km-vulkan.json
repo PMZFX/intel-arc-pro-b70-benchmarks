@@ -1,0 +1,15 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "qwen2-5-1-5b",
+  "quantization": "Q4_K_M",
+  "file_size_gib": 1.04,
+  "backend": "Vulkan",
+  "gpu_count": 1,
+  "build_info": "llama.cpp b8064 (apt)",
+  "threads": 6,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 5468, "std_dev": 11.80 },
+    "tg128": { "tokens_per_sec": 102, "std_dev": 18.81 }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "qwen2-5-1-5b",
+  "quantization": "Q4_K_M",
+  "file_size_gib": 1.04,
+  "backend": "SYCL",
+  "gpu_count": 1,
+  "build_info": "llama.cpp commit 25eec6f",
+  "threads": 6,
+  "sycl_f16": false,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 5313, "std_dev": 786.42 },
+    "tg128": { "tokens_per_sec": 229, "std_dev": 1.04 }
+  },
+  "notes": "SYCL token generation is 2.2x faster than Vulkan on same hardware."
+}

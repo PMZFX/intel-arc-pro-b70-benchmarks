@@ -1,0 +1,18 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "qwen3-5-9b",
+  "quantization": "Q8_0",
+  "file_size_gib": 8.86,
+  "backend": "SYCL",
+  "gpu_count": 1,
+  "build_info": "llama.cpp commit 25eec6f",
+  "threads": 6,
+  "sycl_f16": false,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 1000, "std_dev": 11.39 },
+    "tg128": { "tokens_per_sec": 16.50, "std_dev": 0.01 }
+  },
+  "bandwidth_utilization": 0.24,
+  "notes": "Q8_0 diagnostic test with 22 GiB free VRAM. Still only 24% bandwidth utilization — confirms kernel inefficiency."
+}

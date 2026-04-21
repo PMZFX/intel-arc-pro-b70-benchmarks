@@ -1,0 +1,18 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "qwen3-5-35b-a3b",
+  "quantization": "Q8_0",
+  "file_size_gib": 34.36,
+  "backend": "SYCL",
+  "gpu_count": 2,
+  "gpu_split": "auto",
+  "build_info": "llama.cpp commit 25eec6f",
+  "threads": 6,
+  "sycl_f16": false,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 463.07, "std_dev": 5.31 },
+    "tg128": { "tokens_per_sec": 28.68, "std_dev": 0.02 }
+  },
+  "notes": "MoE model handles multi-GPU well. Forced 50/50 split failed; auto-split works."
+}

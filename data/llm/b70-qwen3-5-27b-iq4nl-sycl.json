@@ -1,0 +1,18 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "qwen3-5-27b",
+  "quantization": "IQ4_NL",
+  "file_size_gib": 14.60,
+  "backend": "SYCL",
+  "gpu_count": 1,
+  "build_info": "llama.cpp commit 25eec6f",
+  "threads": 6,
+  "sycl_f16": false,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 238 },
+    "tg128": { "tokens_per_sec": 5.85 }
+  },
+  "bandwidth_utilization": 0.14,
+  "notes": "Broken kernel on Xe2 Battlemage. Same file size as Q4_0 but 4x slower — dequantization kernel issue."
+}

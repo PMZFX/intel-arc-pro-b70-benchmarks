@@ -1,0 +1,24 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "qwen3-5-27b",
+  "quantization": "Q4_K_M",
+  "file_size_gib": 15.58,
+  "backend": "SYCL",
+  "gpu_count": 1,
+  "build_info": "llama.cpp commit 25eec6f",
+  "threads": 6,
+  "sycl_f16": true,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 725, "std_dev": 1.88 },
+    "tg128": { "tokens_per_sec": 20.56, "std_dev": 0.06 }
+  },
+  "context_scaling": [
+    { "context": "pp512", "tokens_per_sec": 721 },
+    { "context": "pp1024", "tokens_per_sec": 725 },
+    { "context": "pp2048", "tokens_per_sec": 715 },
+    { "context": "pp4096", "tokens_per_sec": 712 }
+  ],
+  "bandwidth_utilization": 0.53,
+  "notes": "Sweet spot quantization for dense models on B70. F16 mode gives 2.4x pp speedup."
+}

@@ -1,0 +1,22 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "qwen3-5-35b-a3b",
+  "quantization": "Q4_K_M",
+  "file_size_gib": 20.49,
+  "backend": "SYCL",
+  "gpu_count": 1,
+  "build_info": "llama.cpp commit 25eec6f",
+  "threads": 6,
+  "sycl_f16": true,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 573 },
+    "tg128": { "tokens_per_sec": 38.9 }
+  },
+  "context_scaling": [
+    { "context": "pp512", "tokens_per_sec": 611 },
+    { "context": "pp1024", "tokens_per_sec": 593 },
+    { "context": "pp2048", "tokens_per_sec": 587 }
+  ],
+  "notes": "Fastest model overall on B70. MoE architecture means only ~3B params active per token. Single GPU."
+}

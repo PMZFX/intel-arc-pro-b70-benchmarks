@@ -1,0 +1,17 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "qwen3-5-27b",
+  "quantization": "Q4_K_S",
+  "file_size_gib": 14.68,
+  "backend": "SYCL",
+  "gpu_count": 1,
+  "build_info": "llama.cpp commit 25eec6f",
+  "threads": 6,
+  "sycl_f16": false,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 309 },
+    "tg128": { "tokens_per_sec": 23.05 }
+  },
+  "bandwidth_utilization": 0.56
+}

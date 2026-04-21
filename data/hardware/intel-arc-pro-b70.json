@@ -1,0 +1,12 @@
+{
+  "name": "Intel Arc Pro B70",
+  "type": "gpu",
+  "manufacturer": "Intel",
+  "vram_gb": 32,
+  "memory_bandwidth_gbps": 608,
+  "memory_type": "GDDR6 ECC",
+  "architecture": "Xe2 Battlemage",
+  "pcie": "PCIe 4.0 x8",
+  "approximate_price_usd": 949,
+  "notes": "Professional GPU with 32GB VRAM. Tested in dual-GPU config (2x B70, 64GB total). SYCL backend via Intel oneAPI is 2.2x faster than Vulkan for token generation."
+}

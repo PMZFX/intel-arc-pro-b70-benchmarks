@@ -1,0 +1,16 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "gemma-4-31b",
+  "quantization": "Q4_K_M",
+  "file_size_gib": 17.05,
+  "backend": "SYCL",
+  "gpu_count": 1,
+  "build_info": "llama.cpp commit 25eec6f (no DNNL)",
+  "threads": 6,
+  "sycl_f16": true,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 704, "std_dev": 0.28 },
+    "tg128": { "tokens_per_sec": 22.62, "std_dev": 0.05 }
+  }
+}

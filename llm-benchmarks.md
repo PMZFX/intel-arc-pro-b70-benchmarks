@@ -1,0 +1,204 @@
+# LLM Benchmarks - Intel Arc Pro B70 (llama.cpp SYCL)
+
+Full single-card LLM numbers. Dual-card results are in [multi-gpu.md](multi-gpu.md), engine comparisons in [engine-comparison.md](engine-comparison.md).
+
+All numbers are from `llama-bench`, SYCL backend, F16 accumulation (`-DGGML_SYCL_F16=ON`) unless otherwise noted. See [methodology.md](methodology.md) for build details.
+
+---
+
+## Master Table - All Models (Single or Dual GPU, SYCL)
+
+Sorted by generation speed (`tg128`):
+
+| Model | Type | Quant | Size (GiB) | GPUs | pp512 t/s | tg128 t/s |
+|-------|------|-------|-----------|------|-----------|-----------|
+| Qwen 2.5-1.5B | Dense | Q4_K_M | 1.0 | 1 | 5,313 | 229 |
+| **Qwen 3.5-9B** | Dense | Q4_K_M | 5.3 | 1 | 1,038 | 54.4 |
+| Qwen 3.5-9B | Dense | Q8_0 | 8.9 | 1 | 1,034 | 48.0 |
+| **Qwen3-Coder-Next 80B-A3B** | **MoE** | Q4_K_M | 45.1 | 2 | 298 | **42.4** |
+| **Qwen 3.5-35B-A3B** | **MoE** | Q4_K_M | 20.5 | 1 | 573 | **38.9** |
+| Gemma 4 26B-A4B | MoE | Q4_K_M | 15.7 | 1 | 943 | 30.1 |
+| Qwen 3.5-35B-A3B | MoE | Q8_0 | 34.4 | 2 | 463 | 28.7 |
+| Qwen 3.5-27B | Dense | Q4_0 | 14.6 | 1 | 243 | 23.7 |
+| Qwen 3.5-27B | Dense | Q4_K_S | 14.7 | 1 | 309 | 23.1 |
+| Gemma 4 31B | Dense | Q4_K_M | 17.1 | 1 | 255 | 22.6 |
+| Qwen 3.5-27B | Dense | Q4_K_M | 15.6 | 1 | 302 | 20.6 |
+| Qwen 3.5-27B | Dense | IQ4_XS | 13.9 | 1 | 267 | 17.5 |
+| Qwen 3.5-27B | Dense | Q4_1 | 16.0 | 1 | 259 | 16.8 |
+| Qwen 3.5-27B | Dense | Q6_K | 20.9 | 1 | 304 | 13.8 |
+| Qwen 3.5-27B | Dense | Q5_K_M | 18.3 | 1 | 300 | 13.8 |
+| Qwen 3.5-27B | Dense | Q5_K_S | 17.6 | 1 | 307 | 13.5 |
+| DeepSeek-R1 70B | Dense | Q4_K_M | 39.6 | 2 | 120 | 11.3 |
+| Qwen 3.5-27B | Dense | IQ4_NL | 14.6 | 1 | 238 | 5.9 |
+| Qwen 3.5-27B | Dense | Q8_0 | 26.6 | 1 | 295 | 4.9 |
+| Gemma 4 31B | Dense | Q8_0 | 30.4 | 2 | 252 | 4.1 |
+
+**Bolded rows** are the practical recommendations for each usage class (small/fast, medium/quality, maximum model).
+
+---
+
+## The Quantization Sweep - Qwen 3.5-27B, All Formats
+
+This is the most useful single picture. Same model, same hardware, ten different quantizations on the same B70. Sorted by generation speed:
+
+| Quant | Method | Size (GiB) | pp512 t/s | tg128 t/s | BW util | Verdict |
+|-------|--------|-----------|-----------|-----------|---------|---------|
+| Q4_0 | Legacy round-to-nearest | 14.63 | 243 | **23.67** | 57% | Fast |
+| Q4_K_S | K-quant 4-bit small | 14.68 | 309 | **23.05** | 56% | Fast |
+| Q4_K_M | K-quant 4-bit mixed | 15.58 | 302 | **20.56** | 53% | Fast - recommended |
+| IQ4_XS | Importance 4-bit XS | 13.94 | 267 | 17.52 | 40% | Medium |
+| Q4_1 | Legacy with offset | 15.99 | 259 | 16.78 | 44% | Medium |
+| Q6_K | K-quant 6-bit | 20.90 | 304 | 13.83 | 48% | Medium |
+| Q5_K_M | K-quant 5-bit mixed | 18.25 | 300 | 13.78 | 41% | Medium |
+| Q5_K_S | K-quant 5-bit small | 17.58 | 307 | 13.50 | 39% | Medium |
+| IQ4_NL | Importance non-linear | 14.60 | 238 | **5.85** | 14% | Broken |
+| Q8_0 | 8-bit round-to-nearest | 26.62 | 295 | **4.88** | 21% | Broken |
+
+**Bandwidth utilization** = (theoretical bytes-per-token read) / (608 GB/s × 1s) × (actual tg / theoretical tg). Higher is better - a value of 57% means the kernel is extracting ~57% of the card's rated memory bandwidth, which is excellent for llama.cpp-class workloads.
+
+**Critical observation: IQ4_NL (14.6 GiB) and Q4_0 (14.6 GiB) are the same file size, but IQ4_NL runs 4× slower.** That's dispositive - the bottleneck is the dequantization kernel, not bytes moved. Some quants have efficient Xe2 kernels, some don't. Q8_0 and IQ4_NL don't.
+
+**Q4_K_M is the sweet spot.** Small enough to fit comfortably on one card with KV headroom, fast dequantization kernel, minimal quality loss vs Q6/Q8 for most uses.
+
+---
+
+## SYCL vs Vulkan - Same Hardware, Same Model
+
+Qwen 2.5-1.5B Q4_K_M, single B70, layers 99:
+
+| Test | Vulkan | SYCL | SYCL/Vulkan |
+|------|--------|------|-------------|
+| pp512 | 5,468 t/s | 5,313 t/s | 0.97× (noise) |
+| tg128 | 102 t/s | 229 t/s | **2.24×** |
+
+SYCL generation is **2.2× faster** than Vulkan on the same hardware. The entire gap comes from SYCL's MMVQ + reorder path, which Vulkan doesn't have.
+
+**Don't use Vulkan for B70 token generation.** Prompt processing is a wash; decode loses a factor of 2.
+
+### Coopmat control (Vulkan only)
+
+| Quant | Coopmat | pp512 | tg128 |
+|-------|---------|-------|-------|
+| Q8_0 | Enabled | 418 | 5.37 |
+| Q8_0 | Disabled (`GGML_VK_DISABLE_COOPMAT=1`) | 244 | 5.32 |
+| Q4_K_M | Enabled | 398 | 10.71 |
+
+Coopmat helps Vulkan prompt processing (~70%) but doesn't move generation. Vulkan Q4_K_M decode (10.7 t/s) is still ~2× slower than SYCL (20.6 t/s) - the gap is SYCL's MMVQ+reorder, not coopmat availability.
+
+---
+
+## F16 Accumulation Mode - Free Prefill Speedup
+
+Rebuild llama.cpp SYCL with `-DGGML_SYCL_F16=ON`. FP16 halves the accumulator size and doubles throughput on Xe2's XMX engines, which have native FP16 support.
+
+| Model | Quant | FP32 pp512 | **F16 pp512** | Change | FP32 tg128 | F16 tg128 | tg change |
+|-------|-------|-----------|---------------|--------|-----------|----------|-----------|
+| Qwen 27B | Q8_0 | 296 | **707** | **+139%** | 4.97 | 4.95 | ~0% |
+| Qwen 27B | Q4_K_M | 302 | **725** | **+140%** | 20.56 | 19.72 | -4% |
+| Gemma 31B | Q4_K_M | 255 | **704** | **+176%** | 22.6 | 21.84 | -3% |
+| Qwen 35B-A3B MoE | Q4_K_M | 573 | 585 | +2% | 38.9 | 38.77 | ~0% |
+
+**F16 gives 2.4-2.8× prompt processing speedup on dense models at a <5% decode regression.** MoE barely moves because its prefill is already compute-bound elsewhere.
+
+**Recommendation: always build with F16 on.** The only reason not to is if you specifically need FP32 accumulation for a research-precision workload. For practical inference, keep it on.
+
+---
+
+## Context Length Scaling
+
+Does performance degrade at longer contexts? Tested at pp512 / pp1024 / pp2048 / pp4096 (F16 mode, single GPU):
+
+**Qwen 3.5-27B Q4_K_M (dense, 15.58 GiB):**
+
+| Context | pp t/s | vs pp512 |
+|---------|--------|----------|
+| 512 | 721 | - |
+| 1024 | 725 | +0.6% |
+| 2048 | 715 | -0.8% |
+| 4096 | 712 | -1.2% |
+| tg128 | 19.62 | - |
+
+**Qwen 3.5-35B-A3B MoE Q4_K_M (20.49 GiB):**
+
+| Context | pp t/s | vs pp512 |
+|---------|--------|----------|
+| 512 | 611 | - |
+| 1024 | 593 | -2.9% |
+| 2048 | 587 | -3.9% |
+| tg128 | 38.41 | - |
+
+Dense model is essentially flat to 4K. MoE drops ~4% at 2K - slightly more KV-cache pressure, still excellent.
+
+---
+
+## The Q8_0 Story
+
+Q8_0 runs 4× slower than Q4_K_M on dense models (4.88 vs 20.56 t/s on Qwen 27B). This is **not** a VRAM pressure issue (Qwen 9B Q8_0 fits with 22 GiB free and still only hits 16.5 t/s - better but still bandwidth-limited).
+
+### Kernel path comparison
+
+| Quant | Path | How forced | tg128 t/s |
+|-------|------|-----------|-----------|
+| Qwen 27B Q4_K_M | MMVQ+reorder | Default | 20.56 |
+| Qwen 27B Q4_K_M | DMMV | `GGML_SYCL_PRIORITIZE_DMMV=1` | 12.38 |
+| Qwen 27B Q8_0 | DMMV | Default (only option upstream) | 4.97 |
+| Qwen 27B Q8_0 | MMVQ | Patched `ggml_sycl_supports_dmmv` | 4.33 |
+
+MMVQ is 1.66× faster than DMMV for Q4_K_M. But Q8_0 is slow on **both** paths - the kernel itself is inefficient on Xe2.
+
+### Driver doesn't fix it
+
+Tested Intel Compute Runtime 26.05→26.09 + IGC 2.28→2.30 with clean rebuild:
+
+| Model | Old pp512 | New pp512 | Old tg128 | New tg128 |
+|-------|----------|-----------|----------|----------|
+| Qwen 27B Q8_0 | 707 | **771 (+9%)** | 4.97 | 4.98 (0%) |
+| Qwen 27B Q4_K_M | 725 | 733 (+1%) | 20.56 | 19.88 (-3%) |
+
+Driver update gave Q8_0 a 9% pp bump but **zero tg improvement**. Confirms the Q8_0 bottleneck is in llama.cpp's SYCL kernel, not in the Intel driver or compiler.
+
+### Our upstream fix
+
+PR [#21527](https://github.com/ggerganov/llama.cpp/pull/21527) (merged) added Q8_0 reorder, lifting tg from 4.88 → 15.24 t/s (3.1× speedup). A follow-up GEMM bug found post-merge was fixed in [#21638](https://github.com/ggerganov/llama.cpp/pull/21638). See [upstream-contributions.md](upstream-contributions.md) for the full story.
+
+---
+
+## MoE vs Dense - What Actually Matters
+
+| Model | Type | Active params | Total size | pp512 | tg128 |
+|-------|------|---------------|-----------|-------|-------|
+| Gemma 4 26B-A4B | MoE | ~4B | 15.7 GiB | 943 | 30.1 |
+| Qwen 3.5-35B-A3B | MoE | ~3B | 20.5 GiB | 573 | 38.9 |
+| Qwen 3.5-27B | Dense | 27B | 15.6 GiB | 302 | 20.6 |
+| Gemma 4 31B | Dense | 31B | 17.1 GiB | 255 | 22.6 |
+
+MoE architectures win on this hardware. Only a fraction of params activate per token, so per-token compute is low. Qwen 35B-A3B is our single-card champion (38.9 t/s) despite being the largest model that fits - it's running like a 3B-dense model in terms of compute-per-token.
+
+**The caveat:** compared to NVIDIA CUDA, Intel SYCL's MoE dispatch is less efficient. On a 3090, Gemma 26B-A4B runs at 134 t/s (18% faster than 9B dense). On the B70, the same MoE runs at 30 t/s - **slower** than 9B dense (54 t/s). MoE still wins on quality-per-second, but the SYCL MoE path has headroom. See [cross-card-comparison.md](cross-card-comparison.md) for the full table.
+
+---
+
+## Other Backend Experiments
+
+### DNNL (oneDNN) path
+
+Built with and without `-DGGML_SYCL_DNN=ON`. DNNL path is currently off for dense-model inference in our builds - no measurable speedup for our configs, and the DNNL INT4 GEMM path is still being investigated. Not recommended to add for B70 users yet.
+
+### Row-split multi-GPU
+
+`--split-mode row` segfaults on model load on our dual-B70 setup with SYCL. Reproduces on pristine master, so it's pre-existing. Workaround: use `--split-mode layer` (the default). Multi-GPU details in [multi-gpu.md](multi-gpu.md).
+
+---
+
+## Quick Recommendations
+
+| Use case | Model | Quant | GPUs | Expected tg |
+|----------|-------|-------|------|-------------|
+| **Fast & smart** | Qwen 3.5-35B-A3B | Q4_K_M | 1 | **38.9 t/s** |
+| **Fastest** | Gemma 4 26B-A4B | Q4_K_M | 1 | 30.1 t/s |
+| **Simple dense** | Qwen 3.5-27B | Q4_K_M | 1 | 20.6 t/s |
+| **Coding, maximum quality** | Qwen3-Coder-Next 80B-A3B | Q4_K_M | 2 | 42.4 t/s |
+| **70B dense** | DeepSeek-R1-70B | Q4_K_M | 2 | 11.3 t/s |
+| **Small/draft** | Qwen 2.5-1.5B | Q4_K_M | 1 | 229 t/s |
+
+Avoid: Q8_0 on dense models (until our upstream fixes land in your build), IQ4_NL, `--split-mode row`, Vulkan for decode.

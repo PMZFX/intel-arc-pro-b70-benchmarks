@@ -1,0 +1,18 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "qwen3-5-27b",
+  "quantization": "Q8_0",
+  "file_size_gib": 26.62,
+  "backend": "SYCL",
+  "gpu_count": 1,
+  "build_info": "llama.cpp commit 25eec6f",
+  "threads": 6,
+  "sycl_f16": true,
+  "date": "2026-04-06",
+  "results": {
+    "pp512": { "tokens_per_sec": 771, "std_dev": 0.85 },
+    "tg128": { "tokens_per_sec": 4.98, "std_dev": 0.01 }
+  },
+  "bandwidth_utilization": 0.21,
+  "notes": "Q8_0 is ~4x slower than expected on Xe2 Battlemage. Kernel efficiency issue, not VRAM pressure. Confirmed backend-independent."
+}
