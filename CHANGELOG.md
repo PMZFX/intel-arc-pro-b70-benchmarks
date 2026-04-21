@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.2.1 - Phase 3 model family coverage (2026-04-21)
+
+Added 5 more models in the same session as v0.2, same commit pin and flags:
+
+| Model | Quant | GPUs | pp | tg | avg W | t/J |
+|-------|-------|------|-----|-----|-------|-----|
+| Llama 3.1-8B Instruct | Q4_K_M | 1 | 2,452 | 82.6 | 37 | 2.26 |
+| Llama 3.3-70B Instruct | Q4_K_M | 2 | 338 | 11.5 | 186 | 0.06 |
+| Mistral Small 3.2-24B | Q4_K_M | 1 | 994 | 30.1 | 167 | 0.18 |
+| Devstral Small 2-24B | Q4_K_M | 1 | 987 | 30.0 | 165 | 0.18 |
+| Phi-4 14B | Q4_K_M | 1 | 1,424 | 43.7 | 40 | 1.08 |
+
+Notes: Llama 3.1-8B and Phi-4 were loaded from NAS over CIFS, so their avg
+wattage includes load-time dilution. Peak wattage (247 / 244 W) is the real
+under-load number. Llama 3.3-70B mirrors DeepSeek-R1 70B almost exactly
+(both dual-card layer-split dense 70B, hit the same bandwidth ceiling).
+
 ## v0.2 - Phase 1 baseline refresh (2026-04-21)
 
 Full single-card and dual-card re-baseline on a pinned llama.cpp commit, with

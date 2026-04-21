@@ -18,20 +18,26 @@ All numbers below are from a single commit-pinned llama.cpp build (`ec6f7a6a5c`,
 
 | Model | Type | Quant | Size | GPUs | pp512 t/s | tg128 t/s | avg W | t/J |
 |-------|------|-------|------|------|-----------|-----------|-------|-----|
+| Qwen 2.5-1.5B | Dense | Q4_K_M | 1.0 GiB | 1 | 8,048 | 216.4 | 129 | 1.68 |
+| Llama 3.1-8B Instruct | Dense | Q4_K_M | 4.6 GiB | 1 | 2,452 | 82.6 | 37 | 2.26 |
+| Qwen 3.5-9B | Dense | Q4_K_M | 5.3 GiB | 1 | 2,302 | 60.2 | 168 | 0.36 |
 | **Qwen 3.6-35B-A3B** | **MoE** | **UD-Q4_K_M** | **20.6 GiB** | **1** | **615** | **54.7** | **114** | **0.48** |
 | Qwen 3.5-35B-A3B | MoE | Q4_K_M | 20.5 GiB | 1 | 618 | 54.5 | 92 | 0.59 |
 | Gemma 4 26B-A4B | MoE | Q4_K_M | 15.7 GiB | 1 | 1,129 | 52.6 | 102 | 0.52 |
+| Qwen 3.5-9B | Dense | Q8_0 | 8.9 GiB | 1 | 2,444 | 48.0 | 149 | 0.32 |
+| Phi-4 14B | Dense | Q4_K_M | 8.4 GiB | 1 | 1,424 | 43.7 | 40 | 1.08 |
 | Qwen3-Coder-Next 80B-A3B | MoE | Q4_K_M | 45.1 GiB | 2 | 305 | 43.4 | 79 | 0.55 |
 | Qwen 3.6-35B-A3B | MoE | Q8_0 | 34.3 GiB | 2 | 458 | 36.5 | 91 | 0.40 |
+| Mistral Small 3.2-24B | Dense | Q4_K_M | 13.3 GiB | 1 | 994 | 30.1 | 167 | 0.18 |
+| Devstral Small 2-24B | Dense | Q4_K_M | 13.3 GiB | 1 | 987 | 30.0 | 165 | 0.18 |
 | Gemma 4 31B | Dense | Q4_K_M | 17.1 GiB | 1 | 601 | 21.7 | 169 | 0.13 |
 | Qwen 3.5-27B | Dense | Q4_K_M | 15.6 GiB | 1 | 718 | 20.4 | 178 | 0.11 |
-| Qwen 3.5-27B | Dense | Q6_K | 20.9 GiB | 1 | 785 | 15.1 | 179 | 0.08 |
 | Qwen 3.5-27B | Dense | Q8_0 | 26.6 GiB | 1 | 776 | **15.3** | 166 | 0.09 |
+| Qwen 3.5-27B | Dense | Q6_K | 20.9 GiB | 1 | 785 | 15.1 | 179 | 0.08 |
 | Gemma 4 31B | Dense | Q8_0 | 30.4 GiB | 2 | 654 | **14.1** | 139 | 0.10 |
-| DeepSeek-R1 70B | Dense | Q4_K_M | 39.6 GiB | 2 | 336 | 11.5 | 185 | 0.06 |
-| Qwen 3.5-9B | Dense | Q4_K_M | 5.3 GiB | 1 | 2,302 | 60.2 | 168 | 0.36 |
-| Qwen 3.5-9B | Dense | Q8_0 | 8.9 GiB | 1 | 2,444 | 48.0 | 149 | 0.32 |
-| Qwen 2.5-1.5B | Dense | Q4_K_M | 1.0 GiB | 1 | 8,048 | 216.4 | 129 | 1.68 |
+| Gemma 4 31B | Dense | Q6_K | 20.9 GiB | 1 | 673 | 13.1 | 179 | 0.07 |
+| DeepSeek-R1 70B Distill | Dense | Q4_K_M | 39.6 GiB | 2 | 336 | 11.5 | 185 | 0.06 |
+| Llama 3.3-70B Instruct | Dense | Q4_K_M | 39.6 GiB | 2 | 338 | 11.5 | 186 | 0.06 |
 
 **t/J** = tg128 tokens per joule of GPU energy consumed (higher = more efficient). Sum of all per-card power.
 
