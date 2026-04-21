@@ -10,34 +10,45 @@ All numbers here are real runs on our workstation. No synthetic estimates.
 
 ## TL;DR - Headline Numbers
 
-**Best single-card result:** Qwen 3.5-35B-A3B (MoE) Q4_K_M - **38.9 t/s** generation, 573 t/s prompt processing.
-**Best dual-card result:** DeepSeek-R1-Distill-Llama-70B Q4_K_M - **11.3 t/s** generation across both cards.
-**Biggest model we've run:** 80B MoE (Qwen3-Coder-Next 80B-A3B Q4_K_M, 48 GiB) at 42.4 t/s on dual B70.
+**Best single-card MoE:** Qwen 3.6-35B-A3B UD-Q4_K_M - **54.7 t/s** generation, 615 t/s prompt processing, 114 W avg.
+**Best dual-card model:** DeepSeek-R1-Distill-Llama-70B Q4_K_M - **11.5 t/s** generation across both cards.
+**Biggest model we've run:** Qwen3-Coder-Next 80B-A3B Q4_K_M (45 GiB) at 43.4 t/s on dual B70, 79 W avg.
 
-| Model | Type | Quant | Size | GPUs | pp512 t/s | tg128 t/s |
-|-------|------|-------|------|------|-----------|-----------|
-| **Qwen 3.5-35B-A3B** | **MoE** | **Q4_K_M** | **20.5 GiB** | **1** | **573** | **38.9** |
-| Qwen3-Coder-Next 80B-A3B | MoE | Q4_K_M | 45.1 GiB | 2 | 298 | 42.4 |
-| Gemma 4 26B-A4B | MoE | Q4_K_M | 15.7 GiB | 1 | 943 | 30.1 |
-| Qwen 3.5-35B-A3B | MoE | Q8_0 | 34.4 GiB | 2 | 463 | 28.7 |
-| Gemma 4 31B | Dense | Q4_K_M | 17.1 GiB | 1 | 255 | 22.6 |
-| Qwen 3.5-27B | Dense | Q4_K_M | 15.6 GiB | 1 | 302 | 20.6 |
-| Qwen 3.5-9B | Dense | Q4_K_M | 5.3 GiB | 1 | 1,038 | 54.4 |
-| DeepSeek-R1 70B | Dense | Q4_K_M | 39.6 GiB | 2 | 120 | 11.3 |
-| Qwen 2.5-1.5B | Dense | Q4_K_M | 1.0 GiB | 1 | 5,313 | 229 |
+All numbers below are from a single commit-pinned llama.cpp build (`ec6f7a6a5c`, 2026-04-21) with power telemetry captured during every run. See [CHANGELOG.md](CHANGELOG.md) for the upgrade from the older data and why it's different.
 
-Full tables, quant sweeps, context scaling and raw data in [llm-benchmarks.md](llm-benchmarks.md).
+| Model | Type | Quant | Size | GPUs | pp512 t/s | tg128 t/s | avg W | t/J |
+|-------|------|-------|------|------|-----------|-----------|-------|-----|
+| **Qwen 3.6-35B-A3B** | **MoE** | **UD-Q4_K_M** | **20.6 GiB** | **1** | **615** | **54.7** | **114** | **0.48** |
+| Qwen 3.5-35B-A3B | MoE | Q4_K_M | 20.5 GiB | 1 | 618 | 54.5 | 92 | 0.59 |
+| Gemma 4 26B-A4B | MoE | Q4_K_M | 15.7 GiB | 1 | 1,129 | 52.6 | 102 | 0.52 |
+| Qwen3-Coder-Next 80B-A3B | MoE | Q4_K_M | 45.1 GiB | 2 | 305 | 43.4 | 79 | 0.55 |
+| Qwen 3.6-35B-A3B | MoE | Q8_0 | 34.3 GiB | 2 | 458 | 36.5 | 91 | 0.40 |
+| Gemma 4 31B | Dense | Q4_K_M | 17.1 GiB | 1 | 601 | 21.7 | 169 | 0.13 |
+| Qwen 3.5-27B | Dense | Q4_K_M | 15.6 GiB | 1 | 718 | 20.4 | 178 | 0.11 |
+| Qwen 3.5-27B | Dense | Q6_K | 20.9 GiB | 1 | 785 | 15.1 | 179 | 0.08 |
+| Qwen 3.5-27B | Dense | Q8_0 | 26.6 GiB | 1 | 776 | **15.3** | 166 | 0.09 |
+| Gemma 4 31B | Dense | Q8_0 | 30.4 GiB | 2 | 654 | **14.1** | 139 | 0.10 |
+| DeepSeek-R1 70B | Dense | Q4_K_M | 39.6 GiB | 2 | 336 | 11.5 | 185 | 0.06 |
+| Qwen 3.5-9B | Dense | Q4_K_M | 5.3 GiB | 1 | 2,302 | 60.2 | 168 | 0.36 |
+| Qwen 3.5-9B | Dense | Q8_0 | 8.9 GiB | 1 | 2,444 | 48.0 | 149 | 0.32 |
+| Qwen 2.5-1.5B | Dense | Q4_K_M | 1.0 GiB | 1 | 8,048 | 216.4 | 129 | 1.68 |
+
+**t/J** = tg128 tokens per joule of GPU energy consumed (higher = more efficient). Sum of all per-card power.
+
+Full tables, quant sweeps, context scaling and raw data in [llm-benchmarks.md](llm-benchmarks.md). Per-run JSON in [data/llm/](data/llm/).
 
 ---
 
 ## Key Findings
 
 1. **SYCL is the right backend, not Vulkan.** SYCL generation is **2.2× faster** than Vulkan on the same hardware (229 vs 102 t/s on Qwen 1.5B Q4_K_M). Vulkan prefill is fine, but SYCL's MMVQ + reorder path wins decode.
-2. **MoE architectures are the sweet spot.** Only ~3-4B params active per token, so you get large-model quality at small-model speed. Qwen 35B-A3B hits 38.9 t/s on a single card - faster than a 27B dense at 20.6 t/s.
-3. **Q4_K_M is the sweet spot quant for dense models.** Q8_0 had a kernel inefficiency on Xe2 that we traced and fixed upstream (PRs #21527 and #21638, both merged). K-quants (Q4_K_M, Q5_K_M, Q6_K) all generate in the 14-23 t/s range on 27B dense.
-4. **F16 accumulation mode gives free ~2.5× prompt speedup.** Build with `-DGGML_SYCL_F16=ON` - pp512 goes from 302 to 725 t/s on Qwen 27B Q4_K_M. Decode unchanged.
-5. **Dual-card layer split doesn't speed up models that fit one card.** It's sequential by design, not a bug. Use it to fit bigger models (70B dense, 80B MoE), or run two independent models on the two cards.
-6. **Usable across a lot of model classes.** 70B dense at 11 t/s, 80B MoE at 42 t/s, video generation up to 720p LTX + 832×480 Wan 2.2 5B. The 32 GB of VRAM per card is the main feature.
+2. **MoE architectures are the sweet spot.** Only ~3-4B params active per token, so you get large-model quality at small-model speed. Qwen 3.5 and 3.6 35B-A3B both hit ~54 t/s on a single card, faster than the 9B dense at 60 t/s per watt-equivalent.
+3. **Qwen 3.6 trades efficiency for quality on MoE.** Qwen 3.6-35B-A3B UD-Q4_K_M generates at 54.7 t/s on a single card at 114 W, matching Qwen 3.5 35B's speed on a newer base model. This is the first public B70 data on Qwen 3.6.
+4. **Q8_0 on dense models is fixed upstream and the fix is big.** PR #21527 + #21638 brought Qwen 27B Q8_0 from 4.88 to 15.3 t/s (3.13×) and Gemma 4 31B Q8_0 dual from 4.1 to 14.1 t/s (3.4×). K-quants and Q8_0 now all generate in the 14-22 t/s range on 27B/31B dense.
+5. **F16 accumulation mode + clean NDEBUG build gives ~2× prompt speedup.** Prior public numbers were suppressed ~50% on prefill because the shipped `llama-cpp-daily` build had asserts enabled (empty `CMAKE_CXX_FLAGS_RELEASE`). Our current build strips asserts via `-DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG"`.
+6. **Dual-card layer split doesn't speed up models that fit one card.** It's sequential by design, not a bug. Use it to fit bigger models (70B dense, 80B MoE), or run two independent models on the two cards.
+7. **80B MoE on consumer hardware works.** Qwen3-Coder-Next 80B-A3B Q4_K_M runs at 43.4 t/s across the pair, drawing only 79 W average. MoE's low per-token compute makes PCIe transfer overhead negligible.
+8. **Per-token power is low on MoE.** Tokens-per-joule on the MoE models (0.4-0.6 t/J single-card) is 3-4× higher than dense 27B+ models. Translates directly to cheaper inference.
 
 ---
 
