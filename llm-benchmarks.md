@@ -2,41 +2,48 @@
 
 Full single-card LLM numbers. Dual-card results are in [multi-gpu.md](multi-gpu.md), engine comparisons in [engine-comparison.md](engine-comparison.md).
 
-All numbers are from `llama-bench`, SYCL backend, F16 accumulation (`-DGGML_SYCL_F16=ON`) unless otherwise noted. See [methodology.md](methodology.md) for build details.
+All numbers below are from `llama-bench`, SYCL backend, F16 accumulation (`-DGGML_SYCL_F16=ON`), commit **`ec6f7a6a5c`** (`b8840-12-gec6f7a6a5-dirty`, 2026-04-21). Every row captured power telemetry via the `xe` driver's hwmon energy counters. See [methodology.md](methodology.md) for build details and [CHANGELOG.md](CHANGELOG.md) for the transition from earlier numbers.
 
 ---
 
-## Master Table - All Models (Single or Dual GPU, SYCL)
+## Master Table - All Models (v0.2 / v0.2.1)
 
-Sorted by generation speed (`tg128`):
+Sorted by generation speed (`tg128`). "t/J" is tokens-per-joule (higher = more efficient).
 
-| Model | Type | Quant | Size (GiB) | GPUs | pp512 t/s | tg128 t/s |
-|-------|------|-------|-----------|------|-----------|-----------|
-| Qwen 2.5-1.5B | Dense | Q4_K_M | 1.0 | 1 | 5,313 | 229 |
-| **Qwen 3.5-9B** | Dense | Q4_K_M | 5.3 | 1 | 1,038 | 54.4 |
-| Qwen 3.5-9B | Dense | Q8_0 | 8.9 | 1 | 1,034 | 48.0 |
-| **Qwen3-Coder-Next 80B-A3B** | **MoE** | Q4_K_M | 45.1 | 2 | 298 | **42.4** |
-| **Qwen 3.5-35B-A3B** | **MoE** | Q4_K_M | 20.5 | 1 | 573 | **38.9** |
-| Gemma 4 26B-A4B | MoE | Q4_K_M | 15.7 | 1 | 943 | 30.1 |
-| Qwen 3.5-35B-A3B | MoE | Q8_0 | 34.4 | 2 | 463 | 28.7 |
-| Qwen 3.5-27B | Dense | Q4_0 | 14.6 | 1 | 243 | 23.7 |
-| Qwen 3.5-27B | Dense | Q4_K_S | 14.7 | 1 | 309 | 23.1 |
-| Gemma 4 31B | Dense | Q4_K_M | 17.1 | 1 | 255 | 22.6 |
-| Qwen 3.5-27B | Dense | Q4_K_M | 15.6 | 1 | 302 | 20.6 |
-| Qwen 3.5-27B | Dense | IQ4_XS | 13.9 | 1 | 267 | 17.5 |
-| Qwen 3.5-27B | Dense | Q4_1 | 16.0 | 1 | 259 | 16.8 |
-| Qwen 3.5-27B | Dense | Q6_K | 20.9 | 1 | 304 | 13.8 |
-| Qwen 3.5-27B | Dense | Q5_K_M | 18.3 | 1 | 300 | 13.8 |
-| Qwen 3.5-27B | Dense | Q5_K_S | 17.6 | 1 | 307 | 13.5 |
-| DeepSeek-R1 70B | Dense | Q4_K_M | 39.6 | 2 | 120 | 11.3 |
+| Model | Type | Quant | Size (GiB) | GPUs | pp512 t/s | tg128 t/s | avg W | t/J |
+|-------|------|-------|-----------|------|-----------|-----------|-------|-----|
+| Qwen 2.5-1.5B | Dense | Q4_K_M | 1.0 | 1 | 8,048 | **216.4** | 129 | 1.68 |
+| Llama 3.1-8B Instruct | Dense | Q4_K_M | 4.6 | 1 | 2,452 | 82.6 | 37* | 2.26 |
+| Qwen 3.5-9B | Dense | Q4_K_M | 5.3 | 1 | 2,302 | 60.2 | 168 | 0.36 |
+| **Qwen 3.6-35B-A3B** | **MoE** | **UD-Q4_K_M** | **20.6** | **1** | **615** | **54.7** | **114** | **0.48** |
+| Qwen 3.5-35B-A3B | MoE | Q4_K_M | 20.5 | 1 | 618 | 54.5 | 92 | 0.59 |
+| Gemma 4 26B-A4B | MoE | Q4_K_M | 15.7 | 1 | 1,129 | 52.6 | 102 | 0.52 |
+| Qwen 3.5-9B | Dense | Q8_0 | 8.9 | 1 | 2,444 | 48.0 | 149 | 0.32 |
+| Phi-4 14B | Dense | Q4_K_M | 8.4 | 1 | 1,424 | 43.7 | 40* | 1.08 |
+| Qwen3-Coder-Next 80B-A3B | MoE | Q4_K_M | 45.1 | 2 | 305 | 43.4 | 79 | 0.55 |
+| Qwen 3.6-35B-A3B | MoE | Q8_0 | 34.3 | 2 | 458 | 36.5 | 91 | 0.40 |
+| Mistral Small 3.2-24B | Dense | Q4_K_M | 13.3 | 1 | 994 | 30.1 | 167 | 0.18 |
+| Devstral Small 2-24B | Dense | Q4_K_M | 13.3 | 1 | 987 | 30.0 | 165 | 0.18 |
+| Gemma 4 31B | Dense | Q4_K_M | 17.1 | 1 | 601 | 21.7 | 169 | 0.13 |
+| Qwen 3.5-27B | Dense | Q4_K_M | 15.6 | 1 | 718 | 20.4 | 178 | 0.11 |
+| Qwen 3.5-27B | Dense | Q8_0 | 26.6 | 1 | 776 | **15.3** | 166 | 0.09 |
+| Qwen 3.5-27B | Dense | Q6_K | 20.9 | 1 | 785 | 15.1 | 179 | 0.08 |
+| Gemma 4 31B | Dense | Q8_0 | 30.4 | 2 | 654 | **14.1** | 139 | 0.10 |
+| Gemma 4 31B | Dense | Q6_K | 20.9 | 1 | 673 | 13.1 | 179 | 0.07 |
+| DeepSeek-R1 70B Distill | Dense | Q4_K_M | 39.6 | 2 | 336 | 11.5 | 185 | 0.06 |
+| Llama 3.3-70B Instruct | Dense | Q4_K_M | 39.6 | 2 | 338 | 11.5 | 186 | 0.06 |
 
-**Bolded rows** are the practical recommendations for each usage class (small/fast, medium/quality, maximum model).
+**Bolded rows** are the flagship recommendations: Qwen 3.6-35B-A3B at UD-Q4_K_M is the current best "smart and fast" single-card option.
 
-Q8_0 and IQ4_NL numbers for Qwen 27B / Gemma 31B are not in the main table because the early figures we captured were taken before the upstream SYCL Q8_0 reorder landed (PRs [#21527](https://github.com/ggerganov/llama.cpp/pull/21527) and [#21638](https://github.com/ggerganov/llama.cpp/pull/21638), both merged). Post-fix numbers will be slotted back in; the pre-fix context is preserved in the Q8_0 story section below for historical reference.
+Asterisked (*) avg-watt rows were loaded from NAS over CIFS (~100 MB/s), so the avg window includes load time where the GPU was near-idle. Peak watts (247, 244 respectively) reflect actual under-load draw.
+
+Q8_0 at 15.3 t/s on Qwen 27B and 14.1 t/s on Gemma 31B dual are the post-fix numbers; previously 4.88 and 4.1 t/s respectively, before PRs [#21527](https://github.com/ggerganov/llama.cpp/pull/21527) and [#21638](https://github.com/ggerganov/llama.cpp/pull/21638) landed. See [upstream-contributions.md](upstream-contributions.md) and the Q8_0 story section below.
 
 ---
 
 ## The Quantization Sweep - Qwen 3.5-27B
+
+> **v0.1 baseline** (build `25eec6f`, pre-NDEBUG-fix). The master table above has the current Q4_K_M, Q6_K and Q8_0 numbers on Qwen 3.5-27B. The remaining five quants (Q4_0, Q4_K_S, IQ4_XS, Q4_1, Q5_K_M, Q5_K_S) haven't been re-run yet; prefill values here are understated by ~50% relative to the current build (tg128 is less affected).
 
 Same model, same hardware, eight quantizations. Sorted by generation speed:
 
@@ -60,6 +67,8 @@ Q8_0 and IQ4_NL rows were captured pre-fix and are preserved in the Q8_0 story s
 ---
 
 ## SYCL vs Vulkan - Same Hardware, Same Model
+
+> **v0.1 baseline.** Both sides used the pre-NDEBUG-fix build. The SYCL vs Vulkan *ratio* is the interesting signal here and should still hold on the current build; raw throughput on SYCL side is now ~50% higher (tg128 on 1.5B is 216 vs the 229 shown below).
 
 Qwen 2.5-1.5B Q4_K_M, single B70, layers 99:
 
@@ -85,6 +94,8 @@ Coopmat helps Vulkan prompt processing (~70%) but doesn't move generation. Vulka
 ---
 
 ## F16 Accumulation Mode - Free Prefill Speedup
+
+> **v0.1 baseline.** Comparison of `-DGGML_SYCL_F16=ON` vs OFF on the old build. The conclusion (turn it on, always) still holds; current builds use F16 by default.
 
 Rebuild llama.cpp SYCL with `-DGGML_SYCL_F16=ON`. FP16 halves the accumulator size and doubles throughput on Xe2's XMX engines, which have native FP16 support.
 
@@ -191,13 +202,16 @@ Built with and without `-DGGML_SYCL_DNN=ON`. DNNL path is currently off for dens
 
 ## Quick Recommendations
 
-| Use case | Model | Quant | GPUs | Expected tg |
-|----------|-------|-------|------|-------------|
-| **Fast & smart** | Qwen 3.5-35B-A3B | Q4_K_M | 1 | **38.9 t/s** |
-| **Fastest** | Gemma 4 26B-A4B | Q4_K_M | 1 | 30.1 t/s |
-| **Simple dense** | Qwen 3.5-27B | Q4_K_M | 1 | 20.6 t/s |
-| **Coding, maximum quality** | Qwen3-Coder-Next 80B-A3B | Q4_K_M | 2 | 42.4 t/s |
-| **70B dense** | DeepSeek-R1-70B | Q4_K_M | 2 | 11.3 t/s |
-| **Small/draft** | Qwen 2.5-1.5B | Q4_K_M | 1 | 229 t/s |
+| Use case | Model | Quant | GPUs | Expected tg | t/J |
+|----------|-------|-------|------|-------------|-----|
+| **Fast & smart** | Qwen 3.6-35B-A3B | UD-Q4_K_M | 1 | **54.7 t/s** | 0.48 |
+| **Most efficient single-card** | Qwen 3.5-35B-A3B | Q4_K_M | 1 | 54.5 t/s | **0.59** |
+| **Fastest mid-size dense** | Phi-4 14B | Q4_K_M | 1 | 43.7 t/s | 1.08 |
+| **Fastest MoE** | Gemma 4 26B-A4B | Q4_K_M | 1 | 52.6 t/s | 0.52 |
+| **Mid-size dense (24B)** | Mistral Small 3.2-24B | Q4_K_M | 1 | 30.1 t/s | 0.18 |
+| **Simple 27B dense** | Qwen 3.5-27B | Q4_K_M | 1 | 20.4 t/s | 0.11 |
+| **Coding, maximum quality** | Qwen3-Coder-Next 80B-A3B | Q4_K_M | 2 | 43.4 t/s | 0.55 |
+| **70B dense** | DeepSeek-R1-70B / Llama 3.3-70B | Q4_K_M | 2 | 11.5 t/s | 0.06 |
+| **Small/draft** | Qwen 2.5-1.5B | Q4_K_M | 1 | 216 t/s | 1.68 |
 
-Avoid: IQ4_NL (still slow on Xe2 as of last test - pending re-check), `--split-mode row` (SYCL segfault), Vulkan for decode.
+Avoid: IQ4_NL on dense models (v0.1 data showed it broken; not yet re-tested on current build), `--split-mode row` (SYCL segfault), Vulkan for decode on anything bigger than ~2B.

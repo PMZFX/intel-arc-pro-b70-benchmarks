@@ -1,0 +1,47 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "qwen3-6-35b-a3b",
+  "quantization": "UD-Q4_K_M",
+  "file_size_gib": 20.61,
+  "backend": "SYCL",
+  "gpu_count": 1,
+  "build_info": "b8840-12-gec6f7a6a5-dirty 2026-04-21",
+  "build_commit": "ec6f7a6a5c",
+  "build_version": "b8840-12-gec6f7a6a5-dirty",
+  "build_date": "2026-04-21",
+  "flash_attention": true,
+  "cache_type_k": "q4_0",
+  "cache_type_v": "q4_0",
+  "context_size": 32768,
+  "pp_size": 32768,
+  "tg_size": 128,
+  "threads": 1,
+  "sycl_f16": true,
+  "date": "2026-04-21",
+  "sweep_id": "3567f30f",
+  "variant": "32k-q4_0kv",
+  "results": {
+    "pp_tokens_per_sec": 482.88,
+    "pp_std_dev": 2.51,
+    "tg_tokens_per_sec": 52.31,
+    "tg_std_dev": 0.03,
+    "ttft_ms": 67859.5,
+    "load_time_s": 74.15,
+    "vram_used_mb": 0
+  },
+  "power": {
+    "source": "intel_xe_hwmon",
+    "peak_watts_w": 435.67,
+    "avg_watts_w": 399.33,
+    "energy_joules": 113450.45,
+    "per_gpu_peak_w": {
+      "card1:card": 207.08,
+      "card2:card": 244.14
+    },
+    "per_gpu_avg_w": {
+      "card1:card": 177.34,
+      "card2:card": 221.99
+    },
+    "tokens_per_joule": 0.131
+  }
+}

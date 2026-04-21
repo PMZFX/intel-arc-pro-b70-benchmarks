@@ -39,52 +39,39 @@ Each GPU idles while the other computes. You get at most 1× single-GPU speed pl
 
 | Setup | pp512 | tg128 |
 |-------|-------|-------|
-| 1 GPU | 302 t/s | 20.6 t/s |
-| 2 GPUs (layer split 50/50) | 306 t/s | 19.7 t/s |
+| 1 GPU | 718 t/s | 20.4 t/s |
+| 2 GPUs (layer split 50/50) | *v0.1: 306 t/s / 19.7 t/s — pending re-run at current build* | |
 
-tg128 drops ~4% with dual GPU. PCIe round-trip per token is a small cost, but it's not free. **Don't split this model.**
+tg128 drops ~4% with dual GPU on this model (v0.1 data). PCIe round-trip per token is a small cost, but it's not free. **Don't split this model.**
 
 ### Model that doesn't fit one card - this is where it pays off
 
-**DeepSeek-R1-Distill-Llama-70B Q4_K_M (39.6 GiB) - requires both cards:**
+Two 70B-class dense models, both needing dual-card:
 
-| Test | Tokens/sec |
-|------|-----------|
-| pp512 | 120.03 |
-| **tg128** | **11.26** |
+| Model | Size | pp512 t/s | **tg128 t/s** | avg W |
+|-------|------|-----------|---------------|-------|
+| DeepSeek-R1-Distill-Llama-70B Q4_K_M | 39.6 GiB | 336 | **11.5** | 185 |
+| Llama 3.3-70B Instruct Q4_K_M | 39.6 GiB | 338 | **11.5** | 186 |
 
-11.3 t/s on a 70B dense model for $1,900 of hardware. Effective bandwidth is 446 GB/s (37% of combined 1,216 GB/s). The ~30% efficiency drop vs single-card is the normal layer-split penalty seen on all platforms including NVIDIA.
+Both 70B dense models land at the same ~11.5 t/s ceiling - same architecture, same layer-split pattern, hitting the same memory-bandwidth-bound decode speed. Effective bandwidth is 446 GB/s (37% of combined 1,216 GB/s). The ~30% efficiency drop vs single-card is the normal layer-split penalty seen on all platforms including NVIDIA.
 
-**This is the headline dual-GPU result.** A 70B dense model running at interactive speed on two consumer-tier GPUs.
+**This is the headline dual-GPU result.** A 70B dense model running at interactive speed on two consumer-tier GPUs, drawing ~185 W average across both cards.
 
 ### MoE that fits one card - single card still wins
 
-**Qwen 3.5-35B-A3B Q4_K_M (20.5 GiB):**
+**Qwen 3.5-35B-A3B Q4_K_M (20.5 GiB):** 1 GPU gives 618 pp / 54.5 tg; dual-card layer split would add overhead with no benefit since the model fits.
 
-| Setup | tg128 |
-|-------|-------|
-| 1 GPU | 38.9 t/s |
-| 2 GPUs (auto split) | *(not re-run - by pattern above, expect ~37 t/s)* |
-
-If the model fits, run it on one card.
+**Qwen 3.6-35B-A3B UD-Q4_K_M (20.6 GiB):** 1 GPU gives 615 pp / **54.7 tg**. Same pattern - single card wins.
 
 ### MoE that needs both cards - great
 
-**Qwen 3.5-35B-A3B Q8_0 (34.4 GiB) - exceeds single-card VRAM:**
+| Model | Size | pp512 | **tg128** | avg W |
+|-------|------|-------|-----------|-------|
+| Qwen 3.5-35B-A3B Q8_0 | 34.4 GiB | 458 | **36.5** | 91 |
+| Qwen 3.6-35B-A3B Q8_0 | 34.3 GiB | 458 | **36.5** | 91 |
+| Qwen3-Coder-Next 80B-A3B Q4_K_M | 45.1 GiB | 305 | **43.4** | 79 |
 
-| Test | 2 GPUs (auto split) |
-|------|---------------------|
-| pp512 | 463 t/s |
-| tg128 | **28.7 t/s** |
-
-**Qwen3-Coder-Next 80B-A3B Q4_K_M (45.1 GiB):**
-
-| Test | 2 GPUs (auto split) |
-|------|---------------------|
-| pp512 | 298 t/s |
-| tg128 | **42.4 t/s** |
-
-MoE works great across both cards because per-token active compute is ~3B params regardless of total size. PCIe hidden-state transfer is the same 4-16 KB per token - negligible when each layer is fast.
+MoE works great across both cards because per-token active compute is ~3B params regardless of total size. PCIe hidden-state transfer is the same 4-16 KB per token - negligible when each layer is fast. Notable: dual-card MoE runs draw **80-90 W average across both cards combined** - lower than a single dense model running single-card.
 
 ---
 

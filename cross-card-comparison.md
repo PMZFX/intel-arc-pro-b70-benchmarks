@@ -6,6 +6,8 @@ Same model, every card we have. This is the data people actually want to see bef
 
 All tests single-card unless noted.
 
+> **Note on build version (2026-04-21):** the B70 numbers in this page are the v0.1 baseline, taken on the pre-NDEBUG-fix build before PRs #21527 / #21638 merged. With the v0.2 clean build, the **B70 gets meaningfully better** across the board: Qwen 3.5-9B Q4_K_M goes from 1,038/54.4 to **2,302/60.2**, Qwen 35B-A3B from 38.9 to **54.5 t/s**, DeepSeek-R1 70B dual from 11.3 to **11.5 t/s** with pp nearly tripled (120→336). The other fleet cards haven't been re-run, so the comparison below is frozen in time as a v0.1 snapshot. Re-run of the full cross-card matrix is deferred while we focus on single-B70 depth. Treat the specific B70 row values here as conservative.
+
 ---
 
 ## Test 1 - Same Model, Every Card: Qwen 3.5-9B

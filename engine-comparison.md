@@ -1,5 +1,7 @@
 # llama.cpp SYCL vs vLLM XPU on Intel Arc Pro B70
 
+> **v0.1 snapshot (2026-04-09 build).** The llama.cpp side used the pre-NDEBUG-fix build, so its prefill numbers are understated ~50%. The *direction* of the vLLM vs llama.cpp comparison still holds (vLLM wins on prefill thanks to XMX flash attention; llama.cpp wins on quantized model support and lower VRAM floor). Absolute llama.cpp numbers should be read as lower-bound. Re-running the head-to-head is deferred while we focus on B70 single-engine depth.
+
 Both engines run on Intel's oneAPI / Level Zero stack, but they take very different paths. This page is the head-to-head.
 
 **Short version:**

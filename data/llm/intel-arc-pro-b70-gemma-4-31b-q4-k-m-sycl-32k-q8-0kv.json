@@ -1,0 +1,47 @@
+{
+  "hardware_id": "intel-arc-pro-b70",
+  "model_id": "gemma-4-31b",
+  "quantization": "Q4_K_M",
+  "file_size_gib": 17.07,
+  "backend": "SYCL",
+  "gpu_count": 1,
+  "build_info": "b8840-12-gec6f7a6a5-dirty 2026-04-21",
+  "build_commit": "ec6f7a6a5c",
+  "build_version": "b8840-12-gec6f7a6a5-dirty",
+  "build_date": "2026-04-21",
+  "flash_attention": true,
+  "cache_type_k": "q8_0",
+  "cache_type_v": "q8_0",
+  "context_size": 32768,
+  "pp_size": 32768,
+  "tg_size": 128,
+  "threads": 1,
+  "sycl_f16": true,
+  "date": "2026-04-21",
+  "variant": "32k-q8_0kv",
+  "notes": "Ran on card 1 (level_zero:1) parallel to phase2 sweep on card 0",
+  "results": {
+    "pp_tokens_per_sec": 183.6,
+    "pp_std_dev": 0.07,
+    "tg_tokens_per_sec": 20.0,
+    "tg_std_dev": 0.02,
+    "ttft_ms": 178474.9,
+    "load_time_s": 184.58,
+    "vram_used_mb": 0
+  },
+  "power": {
+    "source": "intel_xe_hwmon",
+    "peak_watts_w": 463.49,
+    "avg_watts_w": 421.03,
+    "energy_joules": 310833.4,
+    "per_gpu_peak_w": {
+      "card1:card": 235.67,
+      "card2:card": 236.32
+    },
+    "per_gpu_avg_w": {
+      "card1:card": 197.99,
+      "card2:card": 223.04
+    },
+    "tokens_per_joule": 0.0475
+  }
+}

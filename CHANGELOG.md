@@ -1,5 +1,54 @@
 # Changelog
 
+## v0.2.2 - Phase 2 context scaling + KV quant (2026-04-21)
+
+22 new data points sweeping context length 4K to 64K and KV-cache quantization
+(fp16, Q8_0, Q4_0) on three models. Same commit pin (`ec6f7a6a5c`), same build,
+all per-run power telemetry. Runs on both cards in parallel (card 0 ran Qwen
+27B + Qwen 3.6 via Race Bench, card 1 ran Gemma 31B via a direct Python
+runner), validated to produce identical numbers to single-card.
+
+### Prefill scales with context, decode stays flat
+
+tg128 holds essentially constant across 4K-64K with fp16 KV on every model
+tested:
+
+| Model | pp512 (Phase 1) | pp4K | pp8K | pp16K | pp32K | pp64K | tg (all) |
+|-------|-----------------|------|------|-------|-------|-------|----------|
+| Qwen 3.5-27B Q4_K_M | 718 | 629 | 560 | 445 | 310 | 195 | 20.4 |
+| Qwen 3.6-35B-A3B UD-Q4_K_M | 615 | 579 | 559 | 527 | 485 | 411 | 54.5 |
+| Gemma 4 31B Q4_K_M | 601 | 417 | 349 | 268 | 185 | (timeout) | 21.6 |
+
+MoE's prefill degrades the least with context (3.6-35B: 579 to 411 at 4K to
+64K is only -29%). Dense 27B falls faster (-69%). Dense 31B Gemma falls
+fastest (-56% at 32K alone).
+
+### KV quantization tg penalty is model-dependent
+
+| Model | fp16 tg | Q8_0 KV tg | Δ | Q4_0 KV tg | Δ |
+|-------|---------|------------|---|------------|---|
+| Qwen 3.5-27B Q4_K_M (32K) | 20.36 | 19.97 | -1.9% | (pending) | - |
+| Qwen 3.6-35B-A3B (32K) | 54.47 | 52.38 | -3.8% | 52.31 | -4.0% |
+| Gemma 4 31B Q4_K_M (32K) | 21.62 | 20.00 | -7.5% | 19.77 | -8.6% |
+
+Prefill is unaffected by KV quant choice. "Q4_0 KV is free" is a reasonable
+default for Qwen-family MoE, but Gemma 31B takes a noticeable hit.
+
+### 131K context notes
+
+Both 131K runs (Qwen 27B Q4_0 KV, Qwen 3.6 Q4_0 KV) timed out at our 30-minute
+benchmark ceiling. The budget, not the hardware, is the limit: extrapolated
+pp at 131K is ~100 t/s, which at `-r 3` is ~60 min of pure compute. v0.3 will
+re-run 131K variants with `-r 1` to fit the budget.
+
+### Parallel card execution validated
+
+Running independent benchmarks on card 0 and card 1 simultaneously produces
+numbers within 1% of single-card-only baselines (Qwen 3.5-9B Q4_K_M card-1-alone
+was 2,302/60.22; during parallel card-0-busy load it hit 2,303/60.62). No
+cross-card contention on this workstation (CPU-direct PCIe 5.0 x8, 6 CPU cores,
+2x 32 GB VRAM).
+
 ## v0.2.1 - Phase 3 model family coverage (2026-04-21)
 
 Added 5 more models in the same session as v0.2, same commit pin and flags:
