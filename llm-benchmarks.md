@@ -29,17 +29,16 @@ Sorted by generation speed (`tg128`):
 | Qwen 3.5-27B | Dense | Q5_K_M | 18.3 | 1 | 300 | 13.8 |
 | Qwen 3.5-27B | Dense | Q5_K_S | 17.6 | 1 | 307 | 13.5 |
 | DeepSeek-R1 70B | Dense | Q4_K_M | 39.6 | 2 | 120 | 11.3 |
-| Qwen 3.5-27B | Dense | IQ4_NL | 14.6 | 1 | 238 | 5.9 |
-| Qwen 3.5-27B | Dense | Q8_0 | 26.6 | 1 | 295 | 4.9 |
-| Gemma 4 31B | Dense | Q8_0 | 30.4 | 2 | 252 | 4.1 |
 
 **Bolded rows** are the practical recommendations for each usage class (small/fast, medium/quality, maximum model).
 
+Q8_0 and IQ4_NL numbers for Qwen 27B / Gemma 31B are not in the main table because the early figures we captured were taken before the upstream SYCL Q8_0 reorder landed (PRs [#21527](https://github.com/ggerganov/llama.cpp/pull/21527) and [#21638](https://github.com/ggerganov/llama.cpp/pull/21638), both merged). Post-fix numbers will be slotted back in; the pre-fix context is preserved in the Q8_0 story section below for historical reference.
+
 ---
 
-## The Quantization Sweep - Qwen 3.5-27B, All Formats
+## The Quantization Sweep - Qwen 3.5-27B
 
-This is the most useful single picture. Same model, same hardware, ten different quantizations on the same B70. Sorted by generation speed:
+Same model, same hardware, eight quantizations. Sorted by generation speed:
 
 | Quant | Method | Size (GiB) | pp512 t/s | tg128 t/s | BW util | Verdict |
 |-------|--------|-----------|-----------|-----------|---------|---------|
@@ -51,12 +50,10 @@ This is the most useful single picture. Same model, same hardware, ten different
 | Q6_K | K-quant 6-bit | 20.90 | 304 | 13.83 | 48% | Medium |
 | Q5_K_M | K-quant 5-bit mixed | 18.25 | 300 | 13.78 | 41% | Medium |
 | Q5_K_S | K-quant 5-bit small | 17.58 | 307 | 13.50 | 39% | Medium |
-| IQ4_NL | Importance non-linear | 14.60 | 238 | **5.85** | 14% | Broken |
-| Q8_0 | 8-bit round-to-nearest | 26.62 | 295 | **4.88** | 21% | Broken |
+
+Q8_0 and IQ4_NL rows were captured pre-fix and are preserved in the Q8_0 story section below, not here, so the sweep shows current Xe2 behavior rather than a snapshot of a now-patched bug.
 
 **Bandwidth utilization** = (theoretical bytes-per-token read) / (608 GB/s × 1s) × (actual tg / theoretical tg). Higher is better - a value of 57% means the kernel is extracting ~57% of the card's rated memory bandwidth, which is excellent for llama.cpp-class workloads.
-
-**Critical observation: IQ4_NL (14.6 GiB) and Q4_0 (14.6 GiB) are the same file size, but IQ4_NL runs 4× slower.** That's dispositive - the bottleneck is the dequantization kernel, not bytes moved. Some quants have efficient Xe2 kernels, some don't. Q8_0 and IQ4_NL don't.
 
 **Q4_K_M is the sweet spot.** Small enough to fit comfortably on one card with KV headroom, fast dequantization kernel, minimal quality loss vs Q6/Q8 for most uses.
 
@@ -131,9 +128,11 @@ Dense model is essentially flat to 4K. MoE drops ~4% at 2K - slightly more KV-ca
 
 ---
 
-## The Q8_0 Story
+## The Q8_0 Story (Pre-Fix Baseline)
 
-Q8_0 runs 4× slower than Q4_K_M on dense models (4.88 vs 20.56 t/s on Qwen 27B). This is **not** a VRAM pressure issue (Qwen 9B Q8_0 fits with 22 GiB free and still only hits 16.5 t/s - better but still bandwidth-limited).
+**Historical.** The numbers in this section are from before PRs [#21527](https://github.com/ggerganov/llama.cpp/pull/21527) and [#21638](https://github.com/ggerganov/llama.cpp/pull/21638) merged upstream. They're preserved as the investigation log that motivated the fix. Post-fix Q8_0 numbers will be slotted back into the Master Table above when re-benchmarked; current behavior on recent llama.cpp master is comparable to Q4_K_M.
+
+Originally Q8_0 ran 4× slower than Q4_K_M on dense models (4.88 vs 20.56 t/s on Qwen 27B). Not a VRAM pressure issue - Qwen 9B Q8_0 fits with 22 GiB free and hit only 16.5 t/s at the time.
 
 ### Kernel path comparison
 
@@ -201,4 +200,4 @@ Built with and without `-DGGML_SYCL_DNN=ON`. DNNL path is currently off for dens
 | **70B dense** | DeepSeek-R1-70B | Q4_K_M | 2 | 11.3 t/s |
 | **Small/draft** | Qwen 2.5-1.5B | Q4_K_M | 1 | 229 t/s |
 
-Avoid: Q8_0 on dense models (until our upstream fixes land in your build), IQ4_NL, `--split-mode row`, Vulkan for decode.
+Avoid: IQ4_NL (still slow on Xe2 as of last test - pending re-check), `--split-mode row` (SYCL segfault), Vulkan for decode.

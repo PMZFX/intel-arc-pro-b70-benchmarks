@@ -17,18 +17,18 @@ Everything you need to reproduce or contextualize our numbers.
 | **Ray-tracing units** | 32 per card |
 | **Approximate price** | $949 USD (new, as of Apr 2026) |
 | **Kernel driver** | `xe` (in-tree, not `i915`) |
-| **PCIe generation** | PCIe 4.0 x8 per card |
+| **PCIe generation** | PCIe 5.0 x8 per card (negotiated; card is PCIe 5.0 x16 capable) |
 | **DRM devices** | `/dev/dri/card0`, `/dev/dri/card2` (compute); `card1` is the iGPU |
 | **Render nodes** | `renderD128`, `renderD129`, `renderD130` |
 
 ### PCIe Topology
 
-Both B70 cards connect via the **CPU's** PCIe 4.0 lanes on the B850 Taichi Lite (x8/x8 bifurcation). No chipset lanes, no PCIe switch between GPU and CPU.
+Both B70 cards connect via the **CPU's** PCIe 5.0 lanes on the B850 Taichi Lite (x8/x8 bifurcation). No chipset lanes, no shared switch between GPU and CPU.
 
-- **Slot 1** (PCI 03:00.0): CPU PCIe bridge 00:01.1 → Intel switch → GPU → 32 GB prefetchable BAR @ 0x1800000000
-- **Slot 2** (PCI 08:00.0): CPU PCIe bridge 00:01.2 → Intel switch → GPU → 32 GB prefetchable BAR @ 0x3000000000
+- **Slot 1** (PCI 03:00.0): CPU PCIe bridge 00:01.1 → on-card Intel switch → GPU → 32 GB prefetchable BAR @ 0x1800000000
+- **Slot 2** (PCI 08:00.0): CPU PCIe bridge 00:01.2 → on-card Intel switch → GPU → 32 GB prefetchable BAR @ 0x3000000000
 
-Each card has its own dedicated x8 link from the CPU. Effective per-card link is **PCIe 4.0 x8 (~16 GB/s each direction)** since the B70 itself supports PCIe 4.0 x8.
+Each card has its own dedicated x8 link from the CPU. Effective per-card link is **PCIe 5.0 x8 (~32 GB/s each direction)**. Verified by `lspci -vvv` on the card's upstream switch port: LnkCap 32GT/s x16, LnkSta 32GT/s x8 (width negotiates to x8 because the motherboard bifurcates; speed is at full PCIe 5.0).
 
 This matters for multi-GPU: dual cards don't share a PCIe switch, so GPU↔GPU transfers go through the CPU. See [multi-gpu.md](multi-gpu.md) for impact.
 
@@ -47,7 +47,7 @@ This matters for multi-GPU: dual cards don't share a PCIe switch, so GPU↔GPU t
 
 | Spec | Value |
 |------|-------|
-| **Total RAM** | 60 GB (59 GiB reported) |
+| **Total RAM** | 64 GB |
 | **Type** | DDR5 |
 
 ## Motherboard
@@ -58,7 +58,7 @@ This matters for multi-GPU: dual cards don't share a PCIe switch, so GPU↔GPU t
 | **Chipset** | AMD B850 |
 | **PCIe config** | Gen 5 x8/x8 bifurcation (CPU lanes) |
 
-Note: although the board is PCIe 5.0 capable, the B70 is a PCIe 4.0 x8 device, so the effective link negotiates down.
+Both the board and the B70 cards are PCIe 5.0 capable; the link negotiates at full PCIe 5.0 x8 per card.
 
 ## Storage
 

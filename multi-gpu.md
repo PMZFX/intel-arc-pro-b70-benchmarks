@@ -44,17 +44,6 @@ Each GPU idles while the other computes. You get at most 1× single-GPU speed pl
 
 tg128 drops ~4% with dual GPU. PCIe round-trip per token is a small cost, but it's not free. **Don't split this model.**
 
-### Model that barely fits one card - split doesn't help
-
-**Qwen 3.5-27B Q8_0 (26.6 GiB) - fits but with only ~4 GB headroom:**
-
-| Setup | pp512 | tg128 |
-|-------|-------|-------|
-| 1 GPU | 295 t/s | 4.88 t/s |
-| 2 GPUs (layer split 50/50) | 299 t/s | 4.96 t/s |
-
-Essentially unchanged. The Q8_0 kernel inefficiency (documented in [llm-benchmarks.md](llm-benchmarks.md)) dominates - PCIe is nowhere near the bottleneck.
-
 ### Model that doesn't fit one card - this is where it pays off
 
 **DeepSeek-R1-Distill-Llama-70B Q4_K_M (39.6 GiB) - requires both cards:**
@@ -114,7 +103,7 @@ Dense models read **all** their weights per token, so bandwidth limits them and 
 
 ## PCIe x8 vs x16 - Does It Matter?
 
-Both our B70s run at CPU-direct PCIe 4.0 x8 (~16 GB/s each direction).
+Both our B70s run at CPU-direct PCIe 5.0 x8 (~32 GB/s each direction). The cards are PCIe 5.0 x16 capable; width negotiates down to x8 per card because the B850 bifurcates the CPU lanes x8/x8.
 
 | Scenario | x8 vs x16 impact | Why |
 |----------|------------------|-----|
@@ -122,7 +111,7 @@ Both our B70s run at CPU-direct PCIe 4.0 x8 (~16 GB/s each direction).
 | Multi-GPU layer split | ~20-40% penalty | Activations transfer between GPUs at every split point |
 | Multi-GPU tensor parallel (vLLM) | Larger | Every operation exchanges between GPUs |
 
-The actual bytes per PCIe transfer are small (4-16 KB hidden state), but the **latency** of each round-trip adds up when you have dozens of layers and thousands of tokens. x16 would help ~20% for multi-GPU, but the sequential nature of layer split is the fundamental limit, not the bandwidth.
+The actual bytes per PCIe transfer are small (4-16 KB hidden state), but the **latency** of each round-trip adds up when you have dozens of layers and thousands of tokens. Full x16 would help marginally for multi-GPU, but the sequential nature of layer split is the fundamental limit, not the bandwidth — and at PCIe 5.0 x8 we have plenty of headroom for the small transfers that layer split actually does.
 
 ---
 

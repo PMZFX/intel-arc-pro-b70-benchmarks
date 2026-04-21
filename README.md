@@ -34,7 +34,7 @@ Full tables, quant sweeps, context scaling and raw data in [llm-benchmarks.md](l
 
 1. **SYCL is the right backend, not Vulkan.** SYCL generation is **2.2× faster** than Vulkan on the same hardware (229 vs 102 t/s on Qwen 1.5B Q4_K_M). Vulkan prefill is fine, but SYCL's MMVQ + reorder path wins decode.
 2. **MoE architectures are the sweet spot.** Only ~3-4B params active per token, so you get large-model quality at small-model speed. Qwen 35B-A3B hits 38.9 t/s on a single card - faster than a 27B dense at 20.6 t/s.
-3. **Q4_K_M is the sweet spot quant for dense models.** Q8_0 tanks generation to ~5 t/s due to a kernel inefficiency we traced and partially fixed upstream. K-quants (Q4_K_M, Q5_K_M, Q6_K) all generate in the 14-23 t/s range on 27B dense.
+3. **Q4_K_M is the sweet spot quant for dense models.** Q8_0 had a kernel inefficiency on Xe2 that we traced and fixed upstream (PRs #21527 and #21638, both merged). K-quants (Q4_K_M, Q5_K_M, Q6_K) all generate in the 14-23 t/s range on 27B dense.
 4. **F16 accumulation mode gives free ~2.5× prompt speedup.** Build with `-DGGML_SYCL_F16=ON` - pp512 goes from 302 to 725 t/s on Qwen 27B Q4_K_M. Decode unchanged.
 5. **Dual-card layer split doesn't speed up models that fit one card.** It's sequential by design, not a bug. Use it to fit bigger models (70B dense, 80B MoE), or run two independent models on the two cards.
 6. **Usable across a lot of model classes.** 70B dense at 11 t/s, 80B MoE at 42 t/s, video generation up to 720p LTX + 832×480 Wan 2.2 5B. The 32 GB of VRAM per card is the main feature.
