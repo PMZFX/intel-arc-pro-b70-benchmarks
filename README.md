@@ -43,6 +43,8 @@ All numbers below are from a single commit-pinned llama.cpp build (`ec6f7a6a5c`,
 
 Full tables, quant sweeps, context scaling and raw data in [llm-benchmarks.md](llm-benchmarks.md). Per-run JSON in [data/llm/](data/llm/).
 
+**➤ Start here: [FINDINGS.md](FINDINGS.md)** has the 10 non-obvious discoveries this repo documents (NDEBUG build trap, Q8_0 fix validated across models, first Qwen 3.6 data, MoE energy efficiency, KV-quant model sensitivity, etc.).
+
 ---
 
 ## Key Findings
