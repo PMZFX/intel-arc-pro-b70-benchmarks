@@ -1,5 +1,44 @@
 # Changelog
 
+## v0.2.3 - Catch-up: IQ4_NL re-test (2026-04-21)
+
+One data point added: Qwen 3.5-27B IQ4_NL rerun on the current daily driver.
+The original v0.1 number (tg 5.85) was flagged as broken-on-Xe2. Today:
+
+| Model | Quant | pp512 | tg128 | load |
+|-------|-------|-------|-------|------|
+| Qwen 3.5-27B | IQ4_NL | 361.41 | 6.28 | 11.0 s |
+
+Prefill is +52% on the current build (238 to 361), tracking the general
+improvements seen across the v0.2 re-baseline. tg is only +7% (5.85 to 6.28):
+IQ4_NL did not benefit from the Q8_0 / K-quant reorder work the way Q8_0 did
+(+214% tg on the same model in v0.2). IQ4_NL remains the slowest viable quant
+on Xe2.
+
+### 131K at -r 1 still deferred
+
+Planned for this release but stayed out. The llama.cpp harness runs a warmup
+pass before each timed pass, so `pp131072` costs roughly 2x the extrapolated
+pure-compute budget. For Qwen 3.5-27B Q4_K_M dual-card that pushed total
+wall-clock past the local Race Bench node-agent 30-minute per-call timeout.
+Two attempts timed out (Qwen 27B, Qwen 3.6-35B-A3B); the Gemma 31B run was
+aborted before also hitting the ceiling.
+
+To land 131K cleanly, raise `node-config.json` `timeout_s` to ~4800 for both
+SYCL backends and rerun. Tracked for v0.3.
+
+### Also: PCIe telemetry cosmetic breakage
+
+During an unrelated Level Zero driver bisect earlier in the day, a gtt-repro
+test binary triggered simultaneous BCS engine CAT errors on both B70s. After
+the engine reset, `lspci` / `/sys/.../max_link_speed` on both cards now report
+PCIe 1.0 x1 instead of Gen 5 x8, and this persists across warm reboot and
+full AC-off cold power cycle. Empirically the link works at full speed (the
+IQ4_NL and dual-card Gemma benches ran faster than the v0.2 baseline); only
+the capability-register readouts are wrong. Full writeup in Obsidian:
+`PMZFX-B70s/System & Setup/GPU Setup Log.md#2026-04-21`. No impact on the
+numbers in this repo.
+
 ## v0.2.2 - Phase 2 context scaling + KV quant (2026-04-21)
 
 22 new data points sweeping context length 4K to 64K and KV-cache quantization
